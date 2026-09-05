@@ -84,10 +84,15 @@ final class ParakeetVocabularyStoreTests: XCTestCase {
 
         XCTAssertEqual(VocabularyPresetCatalog.allIDs, expectedIDs)
         XCTAssertEqual(VocabularyPresetCatalog.all.count, expectedIDs.count)
-        XCTAssertTrue(VocabularyPresetCatalog.all.allSatisfy { !$0.terms.isEmpty })
+        XCTAssertTrue(VocabularyPresetCatalog.all.allSatisfy { $0.terms.count == 25 })
 
         let allTermCount = VocabularyPresetCatalog.terms(for: expectedIDs).count
-        XCTAssertLessThanOrEqual(allTermCount, 200)
+        XCTAssertEqual(allTermCount, 250)
+        XCTAssertEqual(
+            Set(VocabularyPresetCatalog.terms(for: expectedIDs).map { $0.text.lowercased() }).count,
+            allTermCount
+        )
+        XCTAssertLessThanOrEqual(allTermCount + 3, 256)
     }
 
     func testPresetSelectionIgnoresUnknownIDs() {

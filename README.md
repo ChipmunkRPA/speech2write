@@ -45,7 +45,7 @@ The installer verifies that the app has an intact Developer ID signature from th
 
 ## Vocabulary presets
 
-Setup offers ten optional vocabulary packs: AI & Data, Law, Accounting, Finance, Investment, Art & Design, Politics, Journalism, Software, and Cybersecurity. The same toggles remain available under **Custom Dictionary → Vocabulary Boosting**.
+Setup offers ten optional vocabulary packs: AI & Data, Law, Accounting, Finance, Investment, Art & Design, Politics, Journalism, Software, and Cybersecurity. Each pack contains 25 curated terms, for 250 preset terms in total. The same toggles remain available under **Custom Dictionary → Vocabulary Boosting**.
 
 Preset selections and custom words stay on the Mac. They are used only by the local Parakeet engine, can be enabled or disabled independently, and are included in app settings backups. Enabling a pack also enables vocabulary boosting; disabling the master Boosting switch keeps selections saved without applying them.
 
