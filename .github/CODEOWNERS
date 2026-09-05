@@ -1,0 +1,17 @@
+# Speech2Write code ownership.
+# NOTE: CODEOWNERS is enforced by GitHub only when required pull-request
+# reviews are enabled on the branch. This repo currently allows direct
+# pushes by the maintainer; this file documents review ownership for the
+# supply-chain-sensitive paths flagged in SR-5829 and becomes enforcing
+# if/when a PR-required flow is turned on.
+
+*                   @rsang @ghost1034
+
+# Supply chain: dependency set and pins
+/Package.swift      @rsang @ghost1034
+/Package.resolved   @rsang @ghost1034
+/Vendor/            @rsang @ghost1034
+
+# Build, packaging, and install pipeline
+/scripts/           @rsang @ghost1034
+/Info.plist         @rsang @ghost1034

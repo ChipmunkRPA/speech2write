@@ -1,0 +1,1369 @@
+//
+//  AISettingsView+AIConfiguration.swift
+//  fluid
+//
+//  Extracted from AISettingsView.swift to keep view body under lint limit.
+//
+
+import AppKit
+import SwiftUI
+
+extension AIEnhancementSettingsView {
+    // MARK: - AI Configuration Card
+
+    var aiConfigurationCard: some View {
+        VStack(spacing: 14) {
+            ThemedCard(style: .prominent, hoverEffect: false) {
+                VStack(alignment: .leading, spacing: 16) {
+                    self.aiSetupHeader
+                    self.aiConfigurationSectionPicker
+
+                    Group {
+                        switch self.selectedConfigurationSection {
+                        case .providers:
+                            self.providerConfigurationContent
+                        case .advancedPrompts:
+                            self.promptsStepContent
+                        }
+                    }
+                    .transition(.opacity)
+                    .animation(.easeOut(duration: 0.12), value: self.selectedConfigurationSection)
+                }
+                .padding(16)
+            }
+        }
+    }
+
+    private var aiSetupHeader: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(self.theme.palette.contentBackground.opacity(0.82))
+                    .overlay(
+                        LinearGradient(
+                            colors: [.white.opacity(0.1), .clear],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .stroke(self.theme.palette.accent.opacity(0.35), lineWidth: 1)
+                    )
+
+                Image(systemName: "brain")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(self.theme.palette.accent)
+            }
+            .frame(width: 34, height: 34)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("AI Enhancement")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(self.theme.palette.primaryText)
+                Text("Set up providers and prompt behavior separately.")
+                    .font(.caption)
+                    .foregroundStyle(self.theme.palette.secondaryText)
+            }
+
+            Spacer()
+        }
+    }
+
+    private var aiConfigurationSectionPicker: some View {
+        HStack(spacing: 3) {
+            ForEach(AIEnhancementConfigurationSection.allCases) { section in
+                self.aiConfigurationSectionButton(section)
+            }
+        }
+        .padding(4)
+        .background(
+            Capsule(style: .continuous)
+                .fill(self.theme.palette.contentBackground.opacity(0.78))
+                .overlay(
+                    Capsule(style: .continuous)
+                        .stroke(self.theme.palette.cardBorder.opacity(0.24), lineWidth: 1)
+                )
+        )
+        .frame(maxWidth: .infinity, alignment: .center)
+        .accessibilityElement(children: .contain)
+    }
+
+    private func aiConfigurationSectionButton(_ section: AIEnhancementConfigurationSection) -> some View {
+        let isSelected = self.selectedConfigurationSection == section
+        let isHovering = self.hoveredConfigurationSection == section
+        let tone = self.theme.palette.accent
+        let shape = Capsule(style: .continuous)
+
+        return Button {
+            self.selectedConfigurationSection = section
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: section.systemImage)
+                    .font(.system(size: 12, weight: .semibold))
+                Text(section.title)
+                    .font(.system(size: 13, weight: .semibold))
+            }
+            .foregroundStyle(isSelected ? tone : (isHovering ? self.theme.palette.primaryText : self.theme.palette.secondaryText))
+            .frame(width: 176, height: 36)
+            .contentShape(shape)
+            .background(
+                shape
+                    .fill(isSelected ? tone.opacity(0.13) : (isHovering ? self.theme.palette.cardBackground.opacity(0.66) : .clear))
+                    .overlay(
+                        shape
+                            .stroke(isSelected ? tone.opacity(0.46) : (isHovering ? self.theme.palette.cardBorder.opacity(0.36) : .clear), lineWidth: 1)
+                    )
+                    .shadow(color: isSelected ? tone.opacity(0.18) : .clear, radius: 8, x: 0, y: 2)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(section.title)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .onHover { hovering in
+            self.hoveredConfigurationSection = hovering ? section : nil
+        }
+        .animation(.easeOut(duration: 0.12), value: isHovering)
+        .animation(.easeOut(duration: 0.12), value: isSelected)
+    }
+
+    private var providerConfigurationContent: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            self.aiSetupSummaryBar
+
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Providers")
+                        .font(.system(size: 14, weight: .semibold))
+                    Text("Runs on your Mac with Apple Intelligence. No account, no cloud.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Button(action: { self.viewModel.showHelp.toggle() }) {
+                    HStack(spacing: 5) {
+                        Image(systemName: self.viewModel.showHelp ? "questionmark.circle.fill" : "questionmark.circle")
+                            .font(.system(size: 14))
+                        Text("Help")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundStyle(self.viewModel.showHelp ? self.theme.palette.accent : .secondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule()
+                            .fill(self.viewModel.showHelp ? self.theme.palette.accent.opacity(0.12) : self.theme.palette.cardBackground.opacity(0.8))
+                            .overlay(
+                                Capsule()
+                                    .stroke(self.viewModel.showHelp ? self.theme.palette.accent.opacity(0.3) : self.theme.palette.cardBorder.opacity(0.4), lineWidth: 1)
+                            )
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+
+            if self.viewModel.showHelp { self.helpSectionView }
+
+            self.providerStepContent
+        }
+    }
+
+    private var aiSetupSummaryBar: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                self.aiSetupSummaryItem(icon: "cpu", text: "Local models run on Mac")
+                self.aiSetupSummaryDivider
+                self.aiSetupSummaryItem(icon: "lock.shield", text: "Enhancement never leaves this Mac")
+                self.aiSetupSummaryDivider
+                self.aiSetupSummaryItem(icon: "keyboard", text: "Shortcuts choose when prompts run")
+            }
+
+            VStack(alignment: .leading, spacing: 7) {
+                self.aiSetupSummaryItem(icon: "cpu", text: "Local models run on Mac")
+                self.aiSetupSummaryItem(icon: "lock.shield", text: "Enhancement never leaves this Mac")
+                self.aiSetupSummaryItem(icon: "keyboard", text: "Shortcuts choose when prompts run")
+            }
+        }
+        .padding(.horizontal, 2)
+        .padding(.vertical, 2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var aiSetupSummaryDivider: some View {
+        Rectangle()
+            .fill(self.theme.palette.separator.opacity(0.45))
+            .frame(width: 1, height: 14)
+    }
+
+    private func aiSetupSummaryItem(icon: String, text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(self.theme.palette.accent.opacity(0.95))
+                .frame(width: 14)
+
+            Text(text)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(self.theme.palette.secondaryText)
+                .lineLimit(1)
+        }
+    }
+
+    var helpSectionView: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "lightbulb.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.yellow)
+                Text("Quick Start Guide")
+                    .font(.system(size: 13, weight: .semibold))
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                self.helpStep("1", "Choose Apple Intelligence", "building.2")
+                self.helpStep("2", "Verify the connection", "checkmark.shield")
+                self.helpStep("3", "Set Dictate to Off, Default, or a custom prompt", "text.bubble")
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(self.theme.palette.accent.opacity(0.06))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(self.theme.palette.accent.opacity(0.2), lineWidth: 1)
+                )
+        )
+        .transition(.opacity.combined(with: .scale(scale: 0.98)))
+    }
+
+    func helpStep(_ number: String, _ text: String, _ icon: String) -> some View {
+        HStack(alignment: .center, spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(self.theme.palette.accent.opacity(0.15))
+                    .frame(width: 22, height: 22)
+                Text(number)
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundStyle(self.theme.palette.accent)
+            }
+            Image(systemName: icon)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .frame(width: 16)
+            Text(text)
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    var providerStepContent: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            self.verifiedProvidersSection
+
+            self.allProvidersSection
+
+            if self.viewModel.showingEditProvider {
+                self.editProviderSection
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    private var allProvidersSection: some View {
+        let query = self.providerSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let items = self.unverifiedProviderItems
+        let filteredItems = query.isEmpty
+            ? items
+            : items.filter {
+                $0.name.localizedCaseInsensitiveContains(query) ||
+                    $0.id.localizedCaseInsensitiveContains(query)
+            }
+        let count = filteredItems.count
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "square.grid.2x2")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(self.theme.palette.secondaryText)
+                Text("All providers")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(self.theme.palette.secondaryText)
+                Text("(\(count))")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(self.theme.palette.tertiaryText)
+            }
+
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                TextField("Search providers", text: self.$providerSearchText)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 12))
+            }
+            .padding(8)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(self.theme.palette.contentBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(self.theme.palette.cardBorder.opacity(0.3), lineWidth: 1)
+                    )
+            )
+
+            ScrollViewReader { proxy in
+                ScrollView(.vertical, showsIndicators: false) {
+                    LazyVStack(spacing: 6) {
+                        ForEach(filteredItems) { item in
+                            self.providerCard(item)
+                                .id(item.id)
+                        }
+                        if filteredItems.isEmpty, !query.isEmpty {
+                            Text("No providers match \"\(query)\"")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .padding(.vertical, 12)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                    .padding(4)
+                }
+                .onChange(of: self.expandedProviderID) { _, newID in
+                    if let id = newID {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            proxy.scrollTo(id, anchor: .top)
+                        }
+                    }
+                }
+            }
+            .frame(maxHeight: 380)
+            .padding(8)
+            .background(self.theme.palette.contentBackground.opacity(0.5))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(self.theme.palette.cardBorder.opacity(0.25), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+    }
+
+    private var verifiedProvidersSection: some View {
+        let verified = self.verifiedProviderItems
+        let count = verified.count
+
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color.fluidGreen)
+                Text("Verified providers")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(self.theme.palette.secondaryText)
+                Text("(\(count))")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(self.theme.palette.tertiaryText)
+            }
+
+            if verified.isEmpty {
+                HStack(spacing: 10) {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("No verified providers yet")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(.secondary)
+                        Text("Set up a provider below and verify its connection")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(self.theme.palette.contentBackground.opacity(0.5))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(self.theme.palette.cardBorder.opacity(0.25), lineWidth: 1)
+                        )
+                )
+            } else {
+                LazyVStack(spacing: 10) {
+                    ForEach(verified) { item in
+                        self.verifiedProviderRow(item)
+                    }
+                }
+            }
+        }
+    }
+
+    private struct ProviderItem: Identifiable, Hashable {
+        let id: String
+        let name: String
+        let isBuiltIn: Bool
+    }
+
+    // Use cached provider items from ViewModel for scroll performance
+    private var verifiedProviderItems: [ProviderItem] {
+        self.viewModel.cachedVerifiedProviderItems.map {
+            ProviderItem(id: $0.id, name: $0.name, isBuiltIn: $0.isBuiltIn)
+        }
+    }
+
+    private var unverifiedProviderItems: [ProviderItem] {
+        self.viewModel.cachedUnverifiedProviderItems.map {
+            ProviderItem(id: $0.id, name: $0.name, isBuiltIn: $0.isBuiltIn)
+        }
+    }
+
+    private func providerCard(_ item: ProviderItem) -> some View {
+        let isAppleDisabled = item.id == "apple-intelligence-disabled"
+        let isComingSoon = isAppleDisabled
+        let isExpanded = self.expandedProviderID == item.id && !isAppleDisabled
+        let status = self.providerStatus(for: item)
+        let borderColor = isExpanded
+            ? self.theme.palette.accent.opacity(0.5)
+            : self.theme.palette.cardBorder.opacity(0.3)
+        let statusView = HStack(spacing: 5) {
+            if !status.icon.isEmpty {
+                Image(systemName: status.icon)
+                    .font(.system(size: 10))
+            }
+            Text(status.text)
+        }
+        .font(.caption2)
+        .foregroundStyle(status.color)
+
+        return VStack(alignment: .leading, spacing: 0) {
+            Button(action: { if !isComingSoon { self.toggleProviderExpansion(item.id) } }) {
+                HStack(alignment: .center, spacing: 10) {
+                    self.providerLogoView(for: item)
+                        .frame(width: 34, height: 34)
+
+                    HStack(spacing: 8) {
+                        Text(item.name)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(isComingSoon ? self.theme.palette.accent : self.theme.palette.primaryText)
+
+                        statusView
+                    }
+
+                    Spacer()
+
+                    if !isComingSoon {
+                        Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.secondary.opacity(0.7))
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(isComingSoon)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+
+            if !isExpanded,
+               self.viewModel.connectionStatus(for: item.id) == .failed,
+               !self.viewModel.connectionErrorMessage(for: item.id).isEmpty
+            {
+                self.providerErrorPreview(self.viewModel.connectionErrorMessage(for: item.id), lineLimit: 2)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 10)
+            }
+
+            if isExpanded {
+                Divider()
+                    .background(self.theme.palette.separator.opacity(0.5))
+                    .padding(.horizontal, 14)
+
+                self.providerDetailsSection(for: item)
+                    .padding(14)
+                    .padding(.top, 4)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 2)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(isExpanded ? self.theme.palette.elevatedCardBackground : self.theme.palette.cardBackground.opacity(0.7))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(borderColor, lineWidth: isExpanded ? 1.5 : 1)
+        )
+    }
+
+    private func providerStatus(for item: ProviderItem) -> (text: String, color: Color, icon: String) {
+        if item.id == "apple-intelligence-disabled" {
+            return ("Unavailable", .secondary, "lock.slash")
+        }
+        if item.id == "apple-intelligence" {
+            return ("On-device", .secondary, "lock.shield")
+        }
+        switch self.viewModel.connectionStatus(for: item.id) {
+        case .success:
+            return ("Connection verified", Color.fluidGreen, "checkmark.circle.fill")
+        case .failed:
+            return ("Connection failed", .red, "exclamationmark.circle.fill")
+        case .testing:
+            return ("Verifying...", self.theme.palette.accent, "arrow.triangle.2.circlepath")
+        case .unknown:
+            return ("Connection not tested", .orange, "exclamationmark.circle.fill")
+        }
+    }
+
+    private var isComingSoonProvider: (ProviderItem) -> Bool {
+        { $0.id == "apple-intelligence-disabled" }
+    }
+
+    private func toggleProviderExpansion(_ providerID: String) {
+        if self.expandedProviderID == providerID {
+            self.expandedProviderID = nil
+            self.viewModel.clearEditProviderDraft()
+            self.viewModel.setEditingAPIKey(false, for: providerID)
+        } else {
+            self.expandedProviderID = providerID
+            self.selectProvider(providerID)
+        }
+    }
+
+    private func providerDetailsSection(for item: ProviderItem) -> AnyView {
+        let isAppleDisabled = item.id == "apple-intelligence-disabled"
+        let isApple = item.id == "apple-intelligence"
+        let providerKey = self.viewModel.providerKey(for: item.id)
+        if isAppleDisabled {
+            return AnyView(
+                HStack(spacing: 10) {
+                    Image(systemName: "lock.slash")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                    Text("Apple Intelligence is unavailable on this device. Enable it in System Settings → Apple Intelligence & Siri.")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(self.theme.palette.contentBackground.opacity(0.6))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .stroke(self.theme.palette.cardBorder.opacity(0.35), lineWidth: 1)
+                        )
+                )
+            )
+        }
+        let isCustom = !ModelRepository.shared.isBuiltIn(item.id)
+        let models = self.viewModel.availableModelsByProvider[providerKey] ?? []
+        let hasModels = !models.isEmpty
+        let isVerified = self.viewModel.connectionStatus(for: item.id) == .success
+        let nameBinding = Binding(
+            get: { self.viewModel.savedProviders.first(where: { $0.id == item.id })?.name ?? "" },
+            set: { newValue in
+                self.viewModel.updateCustomProviderName(newValue, for: item.id)
+            }
+        )
+        let baseURLBinding = Binding(
+            get: { self.viewModel.savedProviders.first(where: { $0.id == item.id })?.baseURL ?? self.viewModel.openAIBaseURL },
+            set: { newValue in
+                self.viewModel.updateCustomProviderBaseURL(newValue, for: item.id)
+            }
+        )
+
+        return AnyView(VStack(alignment: .leading, spacing: 10) {
+            if isApple {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "lock.shield.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color.fluidGreen)
+                        Text("Apple Intelligence runs on-device and does not require an API key.")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    HStack(spacing: 10) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.orange)
+                        Text("Output quality can be poor and inconsistent. Use it at your discretion.")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.fluidGreen.opacity(0.08))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .stroke(Color.fluidGreen.opacity(0.2), lineWidth: 1)
+                        )
+                )
+                if !isVerified {
+                    Button("Verify") {
+                        self.viewModel.verifyAppleIntelligence()
+                    }
+                    .fluidButton(.glass, size: .compact)
+                }
+            } else {
+                if isCustom {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "textformat")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text("Provider Name")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+                        TextField("Custom Provider", text: nameBinding)
+                            .textFieldStyle(.roundedBorder)
+                            .font(.system(size: 13))
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "link")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text("Base URL")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+                        TextField("http://localhost:11434/v1", text: baseURLBinding)
+                            .textFieldStyle(.roundedBorder)
+                            .font(.system(size: 13, design: .monospaced))
+                    }
+                }
+
+                HStack(alignment: .center, spacing: 8) {
+                    Image(systemName: "lock.shield.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.fluidGreen)
+                    Text("Runs on this Mac. No API key needed.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                    if let websiteInfo = ModelRepository.shared.providerWebsiteURL(for: item.id),
+                       let url = URL(string: websiteInfo.url)
+                    {
+                        Button(action: { NSWorkspace.shared.open(url) }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "book.fill")
+                                    .font(.system(size: 10))
+                                Text(websiteInfo.label)
+                                    .font(.system(size: 11, weight: .medium))
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(self.theme.palette.accent)
+                            )
+                            .foregroundStyle(.white)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    Text("Model")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 50, alignment: .leading)
+
+                    SearchableModelPicker(
+                        models: models,
+                        selectedModel: self.modelBinding(for: item.id),
+                        selectionEnabled: hasModels,
+                        controlWidth: 180,
+                        controlHeight: AISettingsLayout.providerRowControlHeight
+                    )
+                }
+
+                HStack(spacing: 8) {
+                    Color.clear
+                        .frame(width: 50, alignment: .leading)
+                    self.reasoningButton(for: item.id)
+                }
+
+                if self.viewModel.showingReasoningConfig && self.viewModel.selectedProviderID == item.id {
+                    self.reasoningConfigSection
+                }
+
+                if self.viewModel.connectionStatus(for: item.id) == .failed,
+                   !self.viewModel.connectionErrorMessage(for: item.id).isEmpty
+                {
+                    self.providerErrorPreview(self.viewModel.connectionErrorMessage(for: item.id), lineLimit: 8)
+                }
+
+                if isCustom {
+                    Divider()
+                        .background(self.theme.palette.separator.opacity(0.5))
+
+                    Button(role: .destructive) {
+                        self.viewModel.deleteCurrentProvider()
+                        self.expandedProviderID = nil
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "trash")
+                            Text("Delete Provider")
+                        }
+                        .font(.caption)
+                    }
+                    .fluidCompactButton(foreground: .red, borderColor: .red.opacity(0.6))
+                }
+            }
+        })
+    }
+
+    private func providerErrorPreview(_ message: String, lineLimit: Int) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.red)
+                .padding(.top, 2)
+
+            Text(message)
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(.red.opacity(0.9))
+                .lineLimit(lineLimit)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.red.opacity(0.11))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(Color.red.opacity(0.18), lineWidth: 1)
+        )
+    }
+
+    private func verifiedProviderRow(_ item: ProviderItem) -> some View {
+        let providerKey = self.viewModel.providerKey(for: item.id)
+        let models = self.viewModel.availableModelsByProvider[providerKey] ?? []
+        let isSelected = item.id == self.viewModel.selectedProviderID
+        let hasModels = !models.isEmpty
+        let isEditing = self.viewModel.showingEditProvider && self.viewModel.selectedProviderID == item.id
+        let iconColumnWidth = AISettingsLayout.providerRowControlHeight
+        let actionColumnWidth: CGFloat = 76
+
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .center, spacing: 12) {
+                self.providerLogoView(for: item)
+                    .frame(width: 36, height: 36)
+
+                HStack(spacing: 8) {
+                    Text(item.name)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(self.theme.palette.primaryText)
+
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.fluidGreen)
+
+                    if isSelected {
+                        Text("Active")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Capsule().fill(Color.fluidGreen.opacity(0.2)))
+                            .foregroundStyle(Color.fluidGreen)
+                    }
+                }
+
+                Spacer()
+
+                // Fixed action grid: companion icon, optional reasoning, primary action.
+                HStack(spacing: 8) {
+                    SearchableModelPicker(
+                        models: models,
+                        selectedModel: self.modelBinding(for: item.id),
+                        selectionEnabled: hasModels,
+                        controlWidth: 180,
+                        controlHeight: AISettingsLayout.providerRowControlHeight
+                    )
+
+                    self.reasoningButton(for: item.id)
+                        .frame(width: iconColumnWidth, height: AISettingsLayout.providerRowControlHeight)
+
+                    Button(action: {
+                        self.activateProvider(item.id)
+                        if isEditing {
+                            self.viewModel.clearEditProviderDraft()
+                            self.viewModel.setEditingAPIKey(false, for: item.id)
+                        } else {
+                            self.viewModel.startEditingProvider()
+                            self.viewModel.setEditingAPIKey(true, for: item.id)
+                        }
+                    }) {
+                        Text("Edit")
+                            .font(.system(size: 12, weight: .semibold))
+                            .frame(width: actionColumnWidth, height: AISettingsLayout.providerRowControlHeight)
+                    }
+                    .buttonStyle(SquareIconButtonStyle())
+                    .frame(width: actionColumnWidth, height: AISettingsLayout.providerRowControlHeight)
+                    .help("Edit provider")
+                }
+                .fixedSize(horizontal: true, vertical: false)
+            }
+
+            if isEditing {
+                Divider()
+                    .background(self.theme.palette.separator.opacity(0.5))
+                    .padding(.vertical, 10)
+
+                self.editProviderSection
+            }
+
+            if self.viewModel.showingReasoningConfig,
+               self.viewModel.selectedProviderID == item.id
+            {
+                Divider()
+                    .background(self.theme.palette.separator.opacity(0.5))
+                    .padding(.vertical, 10)
+
+                self.reasoningConfigSection
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(self.theme.palette.cardBackground.opacity(0.7))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(self.theme.palette.cardBorder.opacity(0.25), lineWidth: 0.8)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(isSelected ? Color.fluidGreen.opacity(0.9) : .clear, lineWidth: 2)
+        )
+        // Verified rows always have interactive elements, don't use drawingGroup
+        .contentShape(Rectangle())
+        .onTapGesture {
+            self.activateProvider(item.id)
+            self.expandedProviderID = nil
+        }
+    }
+
+    private func providerLogoView(for item: ProviderItem) -> some View {
+        let name = self.providerLogoName(for: item)
+        let bgColor = self.providerBackgroundColor(for: item)
+
+        return ZStack {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(bgColor)
+
+            if let name {
+                Image(name)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 26, height: 26)
+            } else {
+                Text(self.providerInitials(for: item))
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(self.theme.palette.primaryText)
+            }
+        }
+        .frame(width: 38, height: 38)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    private func providerBackgroundColor(for item: ProviderItem) -> Color {
+        let id = item.id.lowercased()
+        let name = item.name.lowercased()
+
+        if id.contains("anthropic") || name.contains("anthropic") {
+            return Color(red: 0.85, green: 0.75, blue: 0.62) // Warm tan
+        }
+        if id.contains("openai") || name.contains("openai") {
+            return Color(red: 0.95, green: 0.95, blue: 0.95) // Light gray
+        }
+        if id.contains("google") || name.contains("google") || name.contains("gemini") {
+            return Color(red: 0.95, green: 0.95, blue: 0.97) // Soft white-blue
+        }
+        if id.contains("groq") || name.contains("groq") {
+            return Color(red: 0.95, green: 0.6, blue: 0.2) // Orange
+        }
+        if id.contains("cerebras") || name.contains("cerebras") {
+            return Color(red: 0.92, green: 0.92, blue: 0.94) // Light silver
+        }
+        if id.contains("openrouter") || name.contains("openrouter") {
+            return Color(red: 0.2, green: 0.2, blue: 0.25) // Dark slate
+        }
+        if id.contains("xai") || name.contains("xai") || name.contains("x.ai") {
+            return Color(red: 0.95, green: 0.95, blue: 0.95) // Light gray
+        }
+        if id.contains("ollama") || name.contains("ollama") {
+            return Color(red: 0.95, green: 0.95, blue: 0.95) // Light gray
+        }
+        if id.contains("lmstudio") || name.contains("lm studio") || name.contains("lmstudio") {
+            return Color(red: 0.15, green: 0.55, blue: 0.35) // Green
+        }
+        if id.contains("apple") || name.contains("apple intelligence") {
+            return Color(red: 0.6, green: 0.4, blue: 0.7) // Purple for Apple Intelligence
+        }
+        // Default fallback
+        return Color(red: 0.9, green: 0.9, blue: 0.92)
+    }
+
+    private func providerInitials(for item: ProviderItem) -> String {
+        let parts = item.name.split(separator: " ")
+        let initials = parts.prefix(2).compactMap { $0.first }
+        return String(initials)
+    }
+
+    private func providerLogoName(for item: ProviderItem) -> String? {
+        let id = item.id.lowercased()
+        let name = item.name.lowercased()
+
+        if id.contains("openai") || name.contains("openai") {
+            return "Provider_OpenAI"
+        }
+        if id.contains("anthropic") || name.contains("anthropic") {
+            return "Provider_Anthropic"
+        }
+        if id.contains("openrouter") || name.contains("openrouter") {
+            return "Provider_OpenRouter"
+        }
+        if id.contains("xai") || name.contains("xai") || name.contains("x.ai") {
+            return "Provider_xAI"
+        }
+        if id.contains("google") || name.contains("google") || name.contains("gemini") {
+            return "Provider_Gemini"
+        }
+        if id.contains("groq") || name.contains("groq") {
+            return "Provider_Groq"
+        }
+        if id.contains("cerebras") || name.contains("cerebras") {
+            return "Provider_Cerebras"
+        }
+        if id.contains("ollama") || name.contains("ollama") {
+            return "Provider_Ollama"
+        }
+        if id.contains("lmstudio") || name.contains("lm studio") || name.contains("lmstudio") {
+            return "Provider_LMStudio"
+        }
+        if id.contains("apple") || name.contains("apple intelligence") {
+            return "Provider_AppleIntelligence"
+        }
+        if id.contains("compatible") || name.contains("compatible") {
+            return "Provider_Compatible"
+        }
+
+        return nil
+    }
+
+    private func selectProvider(_ providerID: String) {
+        self.viewModel.selectProvider(providerID)
+    }
+
+    private func activateProvider(_ providerID: String) {
+        self.viewModel.selectedProviderID = providerID
+        self.viewModel.handleProviderChange(providerID)
+        self.viewModel.connectionStatus = self.viewModel.connectionStatus(for: providerID)
+    }
+
+    private func modelBinding(for providerID: String) -> Binding<String> {
+        Binding(
+            get: {
+                let key = self.viewModel.providerKey(for: providerID)
+                return self.viewModel.selectedModelByProvider[key] ?? ""
+            },
+            set: { newValue in
+                self.viewModel.selectModel(newValue, for: providerID)
+            }
+        )
+    }
+
+    private func reasoningButton(for providerID: String) -> some View {
+        let hasEnabledConfig = self.viewModel.isReasoningEnabled(for: providerID)
+
+        return Button(action: {
+            self.activateProvider(providerID)
+            self.viewModel.openReasoningConfig()
+        }) {
+            Image(systemName: hasEnabledConfig ? "brain.fill" : "brain")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(hasEnabledConfig ? self.theme.palette.accent : self.theme.palette.primaryText)
+                .frame(width: AISettingsLayout.providerRowControlHeight, height: AISettingsLayout.providerRowControlHeight)
+        }
+        .buttonStyle(SquareIconButtonStyle(
+            foreground: hasEnabledConfig ? self.theme.palette.accent : nil,
+            borderColor: hasEnabledConfig ? self.theme.palette.accent.opacity(0.6) : nil
+        ))
+        .help("Configure reasoning parameters")
+    }
+
+    var promptsStepContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "text.bubble.fill")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(self.theme.palette.accent)
+                Text("Advanced Prompts")
+                    .font(.system(size: 14, weight: .semibold))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+
+                Button {
+                    self.isPromptProfilesHelpPresented.toggle()
+                } label: {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(self.theme.palette.secondaryText.opacity(0.78))
+                        .frame(width: 22, height: 22)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .help("About prompt profiles")
+                .popover(isPresented: self.$isPromptProfilesHelpPresented, arrowEdge: .top) {
+                    self.promptProfilesHelpPopover
+                }
+
+                Spacer()
+            }
+
+            self.advancedSettingsCard
+        }
+    }
+
+    var builtInProvidersList: [(id: String, name: String)] {
+        ModelRepository.shared.builtInProvidersList(
+            includeAppleIntelligence: true,
+            appleIntelligenceAvailable: self.viewModel.appleIntelligenceAvailable
+        )
+    }
+
+    var editProviderSection: some View {
+        let isBuiltIn = ModelRepository.shared.isBuiltIn(self.viewModel.selectedProviderID)
+        let isVerified = self.viewModel.connectionStatus(for: self.viewModel.selectedProviderID) == .success
+
+        return VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 8) {
+                Image(systemName: "pencil.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(self.theme.palette.accent)
+                Text("Edit Provider")
+                    .font(.system(size: 14, weight: .semibold))
+                Spacer()
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                if !isBuiltIn {
+                    HStack(spacing: 14) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "textformat")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text("Name")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(.secondary)
+                            }
+                            TextField("Provider name", text: self.$viewModel.editProviderName)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.system(size: 13))
+                        }
+                        .frame(maxWidth: 200)
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "link")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text("Base URL")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(.secondary)
+                            }
+                            TextField("e.g., http://localhost:11434/v1", text: self.$viewModel.editProviderBaseURL)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.system(size: 13, design: .monospaced))
+                        }
+                    }
+                }
+
+                HStack(alignment: .center, spacing: 8) {
+                    Image(systemName: "lock.shield.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.fluidGreen)
+                    Text("Runs on this Mac. No API key needed.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                    if let websiteInfo = ModelRepository.shared.providerWebsiteURL(for: self.viewModel.selectedProviderID),
+                       let url = URL(string: websiteInfo.url)
+                    {
+                        Button(action: { NSWorkspace.shared.open(url) }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "book.fill")
+                                    .font(.system(size: 10))
+                                Text(websiteInfo.label)
+                                    .font(.system(size: 11, weight: .medium))
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(self.theme.palette.accent)
+                            )
+                            .foregroundStyle(.white)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            HStack(spacing: 10) {
+                Button(action: {
+                    guard self.viewModel.saveEditedProviderAPIKey() else { return }
+                    if !isBuiltIn {
+                        self.viewModel.saveEditedProvider()
+                    } else {
+                        self.viewModel.clearEditProviderDraft()
+                    }
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("Save")
+                    }
+                }
+                .fluidButton(.glass, size: .compact)
+                .disabled(!isBuiltIn &&
+                    (self.viewModel.editProviderName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                        self.viewModel.editProviderBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+
+                Button("Cancel") {
+                    self.viewModel.clearEditProviderDraft()
+                }
+                .fluidButton(.compact, size: .compact)
+            }
+
+            HStack(spacing: 10) {
+                if isVerified {
+                    Button("Reset Verification") {
+                        self.viewModel.resetVerification(for: self.viewModel.selectedProviderID)
+                        self.viewModel.clearEditProviderDraft()
+                    }
+                    .fluidCompactButton(foreground: .red, borderColor: .red.opacity(0.6))
+                }
+
+                if !isBuiltIn {
+                    Button(role: .destructive) {
+                        self.viewModel.deleteCurrentProvider()
+                        self.viewModel.clearEditProviderDraft()
+                        self.expandedProviderID = nil
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "trash")
+                            Text("Delete Provider")
+                        }
+                        .font(.caption)
+                    }
+                    .fluidCompactButton(foreground: .red, borderColor: .red.opacity(0.6))
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(self.theme.palette.elevatedCardBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(self.theme.palette.accent.opacity(0.35), lineWidth: 1)
+                )
+                .shadow(
+                    color: self.theme.metrics.cardShadow.color.opacity(self.theme.metrics.cardShadow.opacity * 0.6),
+                    radius: 8,
+                    x: 0,
+                    y: 4
+                )
+        )
+        .padding(.vertical, 4)
+        .transition(.opacity.combined(with: .scale(scale: 0.98)))
+    }
+
+    func openReasoningConfig() {
+        self.viewModel.openReasoningConfig()
+    }
+
+    var reasoningConfigSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "brain.head.profile")
+                    .font(.system(size: 14))
+                    .foregroundStyle(self.theme.palette.accent)
+                Text("Reasoning for \(self.viewModel.selectedModel)")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(self.theme.palette.primaryText)
+                Spacer()
+                Button(action: { self.viewModel.showingReasoningConfig = false }) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Close")
+            }
+
+            HStack(spacing: 16) {
+                Toggle("", isOn: self.$viewModel.editingReasoningEnabled)
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                Text(self.viewModel.editingReasoningEnabled ? "Enabled" : "Disabled")
+                    .font(.caption)
+                    .foregroundStyle(self.viewModel.editingReasoningEnabled ? self.theme.palette.accent : .secondary)
+            }
+
+            if self.viewModel.editingReasoningEnabled {
+                VStack(alignment: .leading, spacing: 8) {
+                    // Parameter type picker
+                    HStack(spacing: 12) {
+                        Text("Parameter")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .frame(width: 70, alignment: .trailing)
+
+                        Picker("", selection: Binding(
+                            get: {
+                                if self.viewModel.editingReasoningParamName == "reasoning_effort" {
+                                    return "reasoning_effort"
+                                } else if self.viewModel.editingReasoningParamName == "enable_thinking" {
+                                    return "enable_thinking"
+                                } else {
+                                    return "custom"
+                                }
+                            },
+                            set: { newValue in
+                                if newValue == "custom" {
+                                    if self.viewModel.editingReasoningParamName == "reasoning_effort" ||
+                                        self.viewModel.editingReasoningParamName == "enable_thinking"
+                                    {
+                                        self.viewModel.editingReasoningParamName = ""
+                                    }
+                                } else {
+                                    self.viewModel.editingReasoningParamName = newValue
+                                    // Set sensible default value when switching
+                                    if newValue == "reasoning_effort", !["none", "minimal", "low", "medium", "high"].contains(self.viewModel.editingReasoningParamValue) {
+                                        self.viewModel.editingReasoningParamValue = "low"
+                                    } else if newValue == "enable_thinking", !["true", "false"].contains(self.viewModel.editingReasoningParamValue) {
+                                        self.viewModel.editingReasoningParamValue = "true"
+                                    }
+                                }
+                            }
+                        )) {
+                            Text("reasoning_effort").tag("reasoning_effort")
+                            Text("enable_thinking").tag("enable_thinking")
+                            Text("Custom...").tag("custom")
+                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                        .frame(width: 140)
+                    }
+
+                    // Custom parameter name field
+                    if self.viewModel.editingReasoningParamName != "reasoning_effort" &&
+                        self.viewModel.editingReasoningParamName != "enable_thinking"
+                    {
+                        HStack(spacing: 12) {
+                            Text("Name")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .frame(width: 70, alignment: .trailing)
+                            TextField("e.g., thinking_budget", text: self.$viewModel.editingReasoningParamName)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.caption)
+                                .frame(width: 140)
+                        }
+                    }
+
+                    // Value picker/field
+                    HStack(spacing: 12) {
+                        Text("Value")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .frame(width: 70, alignment: .trailing)
+
+                        if self.viewModel.editingReasoningParamName == "reasoning_effort" {
+                            Picker("", selection: self.$viewModel.editingReasoningParamValue) {
+                                Text("none").tag("none")
+                                Text("minimal").tag("minimal")
+                                Text("low").tag("low")
+                                Text("medium").tag("medium")
+                                Text("high").tag("high")
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                            .frame(width: 100)
+                        } else if self.viewModel.editingReasoningParamName == "enable_thinking" {
+                            Picker("", selection: self.$viewModel.editingReasoningParamValue) {
+                                Text("true").tag("true")
+                                Text("false").tag("false")
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                            .frame(width: 100)
+                        } else {
+                            TextField("value", text: self.$viewModel.editingReasoningParamValue)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.caption)
+                                .frame(width: 100)
+                        }
+                    }
+                }
+                .padding(.leading, 4)
+            }
+
+            HStack(spacing: 8) {
+                Button(action: { self.saveReasoningConfig() }) {
+                    Text("Save")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .fluidButton(.accent, size: .small)
+                .frame(minWidth: 60, minHeight: 26)
+
+                Button("Cancel") { self.viewModel.showingReasoningConfig = false }
+                    .fluidButton(.compact, size: .compact)
+                    .font(.system(size: 12))
+                    .frame(minWidth: 60, minHeight: 26)
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(self.theme.palette.cardBackground.opacity(0.95))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(self.theme.palette.accent.opacity(0.3), lineWidth: 1)
+                )
+                .shadow(color: self.theme.palette.accent.opacity(0.1), radius: 8, x: 0, y: 4)
+        )
+        .transition(.opacity.combined(with: .scale(scale: 0.98)))
+    }
+
+    func saveReasoningConfig() {
+        self.viewModel.saveReasoningConfig()
+    }
+
+    // The add-custom-provider flow was removed in 1.1.4: Speech2Write is
+    // local-only, and arbitrary OpenAI-compatible endpoints are no longer
+    // supported. The view model plumbing (saveNewProvider, createDraftProvider)
+    // is retained so saved-provider types keep compiling.
+}

@@ -1,0 +1,24 @@
+{
+  "alpha": 2.8,
+  "minCtcScore": -2.2,
+  "minSimilarity": 0.72,
+  "minCombinedConfidence": 0.64,
+  "minTermLength": 3,
+  "terms": [
+    {
+      "text": "Speech2Write",
+      "aliases": ["speech2write", "speech to write", "speech two write"],
+      "weight": 10.0
+    },
+    {
+      "text": "CPA Automation",
+      "aliases": ["C.P.A. Automation", "CPA automation"],
+      "weight": 10.0
+    },
+    {
+      "text": "cpaautomation.ai",
+      "aliases": ["CPA Automation dot AI", "CPA automation AI"],
+      "weight": 10.0
+    }
+  ]
+}

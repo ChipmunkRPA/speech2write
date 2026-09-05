@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>Speech2Write</string>
+	<key>CFBundleExecutable</key>
+	<string>Speech2Write</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.raysang.platypusflow</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Speech2Write</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.4.0</string>
+	<key>CFBundleVersion</key>
+	<string>17</string>
+	<key>CFBundleGetInfoString</key>
+	<string>Speech2Write by CPA Automation · cpaautomation.ai</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<key>LSMultipleInstancesProhibited</key>
+	<true/>
+	<key>LSMinimumSystemVersion</key>
+	<string>15.0</string>
+	<key>LSUIElement</key>
+	<false/>
+	<key>NSAccessibilityUsageDescription</key>
+	<string>Speech2Write needs Accessibility permission to type your dictation into other apps.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Speech2Write needs permission to control system events to manage launch at startup.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Speech2Write needs microphone access to transcribe your speech on this Mac.</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2026 CPA Automation. Invented by Ray Sang.</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Speech2Write uses on-device speech recognition to transcribe your voice privately.</string>
+</dict>
+</plist>
