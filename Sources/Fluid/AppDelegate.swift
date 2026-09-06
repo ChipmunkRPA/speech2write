@@ -92,6 +92,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         }
     }
 
+    /// Closing the main window should leave dictation, global shortcuts, and the
+    /// menu-bar item running. Users can still terminate explicitly with Command-Q
+    /// or the menu-bar Quit command.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        DebugLogger.shared.info(
+            "Last window closed; continuing in the menu bar",
+            source: "AppDelegate"
+        )
+        return false
+    }
+
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if self.shouldSuppressNextReopenActivation {
             self.shouldSuppressNextReopenActivation = false

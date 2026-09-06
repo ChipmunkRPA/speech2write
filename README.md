@@ -10,6 +10,7 @@ Speech2Write is an open-source project from [CPA Automation](https://cpaautomati
 - On-device speech recognition — audio is transcribed locally, not sent to a server
 - Two speech engines: Parakeet TDT v2 (fastest local, English only) and Apple Speech (macOS 26+, multilingual)
 - Live transcription preview with a notch-aware overlay
+- Close-to-menu-bar behavior so dictation remains available after closing the main window
 - Optional AI post-processing that runs entirely on-device via Apple Intelligence (off by default)
 - Custom dictionary and local vocabulary boosting for names and uncommon terms
 - Optional field vocabulary presets for AI, law, accounting, finance, investment, art, politics, journalism, software, and cybersecurity

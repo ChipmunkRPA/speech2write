@@ -17,6 +17,10 @@ This repository is a modified version of [FluidVoice](https://github.com/altic-d
 - Default speech model changed to Parakeet TDT v2 (fastest local English model) on Apple Silicon.
 - The GPLv3 license is retained unchanged; see [LICENSE](LICENSE). All modifications in this fork are licensed under GPLv3.
 
+## 1.4.2
+
+- Closing the main window now keeps Speech2Write running in the menu bar so global dictation shortcuts remain available. Command-Q and **Quit Speech2Write** still terminate the app explicitly.
+
 ## 1.4.1
 
 - Expanded every optional field vocabulary pack to 25 curated terms, for 250 preset terms in total while keeping the all-enabled built-in vocabulary within Parakeet's 256-term runtime limit.
